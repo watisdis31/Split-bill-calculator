@@ -17,6 +17,15 @@ function getDiscountAmount(itemsTotal) {
   return discountValue;
 }
 
+function updateDiscountUI() {
+  const label = document.getElementById("percentLabel");
+  label.style.display =
+    discountType.value === "percent" ? "block" : "none";
+}
+
+updateDiscountUI();
+discountType.addEventListener("change", updateDiscountUI);
+
 function addItem() {
   const name = itemName.value.trim();
   const price = Number(itemPrice.value);

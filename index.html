@@ -10,7 +10,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
-    <link rel="icon" type="image/png" href="/assets/favicon2.png">
+    <link rel="icon" type="image/png" href="/assets/favicon2.png" />
   </head>
   <body>
     <div class="bw-screen container-fluid p-3">
@@ -54,16 +54,19 @@
 
         <!-- Discount Type -->
         <select id="discountType" class="form-select bw-input mb-2">
-          <option value="amount">Discount Amount</option>
           <option value="percent">Discount %</option>
+          <option value="amount">Discount Amount</option>
         </select>
 
-        <input
-          id="discount"
-          type="number"
-          class="form-control bw-input mb-2"
-          placeholder="Discount"
-        />
+        <div class="bw-input-wrapper mb-2">
+          <input
+            id="discount"
+            type="number"
+            class="form-control bw-input"
+            placeholder="Discount"
+          />
+          <span id="percentLabel" class="bw-percent">%</span>
+        </div>
 
         <!-- Discount Timing -->
         <select id="discountTiming" class="form-select bw-input mb-2">
