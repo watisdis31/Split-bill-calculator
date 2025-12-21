@@ -10,6 +10,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="/assets/favicon2.png">
   </head>
   <body>
     <div class="bw-screen container-fluid p-3">
@@ -50,6 +51,26 @@
       <!-- Charges -->
       <div class="bw-box mb-3">
         <h6 class="bw-subtitle">CHARGES</h6>
+
+        <!-- Discount Type -->
+        <select id="discountType" class="form-select bw-input mb-2">
+          <option value="amount">Discount Amount</option>
+          <option value="percent">Discount %</option>
+        </select>
+
+        <input
+          id="discount"
+          type="number"
+          class="form-control bw-input mb-2"
+          placeholder="Discount"
+        />
+
+        <!-- Discount Timing -->
+        <select id="discountTiming" class="form-select bw-input mb-2">
+          <option value="before">Before Tax & Service</option>
+          <option value="after">After Tax & Service</option>
+        </select>
+
         <input
           id="serviceCharge"
           type="number"

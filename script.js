@@ -7,6 +7,16 @@ function format(value) {
     : "$" + value.toFixed(2);
 }
 
+function getDiscountAmount(itemsTotal) {
+  const discountValue = Number(discount.value) || 0;
+  const type = discountType.value;
+
+  if (type === "percent") {
+    return itemsTotal * (discountValue / 100);
+  }
+  return discountValue;
+}
+
 function addItem() {
   const name = itemName.value.trim();
   const price = Number(itemPrice.value);
@@ -92,25 +102,56 @@ function updateYourSubtotal() {
 
 function calculate() {
   const itemsTotalValue = items.reduce((a, b) => a + b.price, 0);
-  const service = Number(serviceCharge.value);
-  const taxValue = Number(tax.value);
+  if (itemsTotalValue === 0) return;
+
+  const serviceValue = Number(serviceCharge.value) || 0;
+  const taxValue = Number(tax.value) || 0;
 
   let yourSum = 0;
   document
     .querySelectorAll("#yourItems input:checked")
     .forEach((cb) => (yourSum += Number(cb.dataset.price)));
 
-  const servicePercent = service / itemsTotalValue;
-  const taxPercent = taxValue / itemsTotalValue;
+  const discountAmount = getDiscountAmount(itemsTotalValue);
+  const timing = discountTiming.value;
 
-  const yourService = yourSum * servicePercent;
-  const yourTax = yourSum * taxPercent;
-  const totalPay = yourSum + yourService + yourTax;
+  let servicePercent, taxPercent;
+  let yourDiscountShare, totalPay;
+
+  if (timing === "before") {
+    // DISCOUNT BEFORE TAX & SERVICE
+    const netSubtotal = itemsTotalValue - discountAmount;
+
+    servicePercent = serviceValue / netSubtotal;
+    taxPercent = taxValue / netSubtotal;
+
+    yourDiscountShare =
+      (yourSum / itemsTotalValue) * discountAmount;
+
+    const yourNet = yourSum - yourDiscountShare;
+    const yourService = yourNet * servicePercent;
+    const yourTax = yourNet * taxPercent;
+
+    totalPay = yourNet + yourService + yourTax;
+  } else {
+    // DISCOUNT AFTER TAX & SERVICE
+    servicePercent = serviceValue / itemsTotalValue;
+    taxPercent = taxValue / itemsTotalValue;
+
+    const yourService = yourSum * servicePercent;
+    const yourTax = yourSum * taxPercent;
+
+    yourDiscountShare =
+      (yourSum / itemsTotalValue) * discountAmount;
+
+    totalPay = yourSum + yourService + yourTax - yourDiscountShare;
+  }
 
   result.classList.remove("d-none");
   result.innerHTML = `
     <p>Service: ${(servicePercent * 100).toFixed(2)}%</p>
     <p>Tax: ${(taxPercent * 100).toFixed(2)}%</p>
+    <p>Your Discount: -${format(yourDiscountShare)}</p>
     <hr>
     <p>Your Total: <b>${format(totalPay)}</b></p>
   `;
