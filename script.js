@@ -7,6 +7,13 @@ function format(value) {
     : "$" + value.toFixed(2);
 }
 
+document.addEventListener("click", function() { //if quantity is empty then reset it to 1
+  const qty = itemQty;
+  if (!qty.value) {
+    qty.value = 1;
+  }
+});
+
 function getDiscountAmount(itemsTotal) {
   const discountValue = Number(discount.value) || 0;
   const type = discountType.value;
@@ -29,17 +36,20 @@ discountType.addEventListener("change", updateDiscountUI);
 function addItem() {
   const name = itemName.value.trim();
   const price = Number(itemPrice.value);
+  const quantity = itemQty.value;
 
-  if (!name || price <= 0) return;
+  if (!name || price <= 0 || !quantity) return; //returns nothing if quantity is empty
 
   items.push({
     name,
     price,
+    quantity, // new quantity key
     isEditing: false,
   });
 
   itemName.value = "";
   itemPrice.value = "";
+  itemQty.value = 1; //sets qty value back to 1
 
   renderItems();
 }
@@ -51,10 +61,10 @@ function renderItems() {
   let total = 0;
 
   items.forEach((item, index) => {
-    total += item.price;
+    total += item.price * item.quantity; //put * qty here - bran
 
     // All orders
-    if (item.isEditing) {
+    if (item.isEditing) { //added new quantity stuffs
       itemList.innerHTML += `
         <li class="list-group-item">
           <input class="form-control bw-input mb-1"
@@ -64,6 +74,11 @@ function renderItems() {
                  class="form-control bw-input mb-2"
                  id="edit-price-${index}"
                  value="${item.price}">
+          <input type="number"
+                 class="form control bw-input mb-2"
+                 id="edit-quantity-${index}"
+                 style="padding-left:15px"
+                 value="${item.quantity}">
           <button class="bw-btn me-1" onclick="saveItem(${index})">SAVE</button>
           <button class="bw-remove-btn" onclick="removeItem(${index})">✖</button>
         </li>
@@ -74,6 +89,7 @@ function renderItems() {
           <div>
             ${item.name}
             <small class="d-block text-muted">${format(item.price)}</small>
+            <small>qty: ${item.quantity}</small>
           </div>
           <div>
             <button class="bw-edit-btn me-1" onclick="editItem(${index})">✏️</button>
@@ -90,7 +106,7 @@ function renderItems() {
           <input type="checkbox"
                  data-price="${item.price}"
                  onchange="updateYourSubtotal()">
-          ${item.name} (${format(item.price)})
+          ${item.name} (${format(item.price)}) <input class="your-quantity" type="number" max="${item.quantity}" min="0" value="0">
         </li>
       `;
     }
@@ -182,11 +198,13 @@ function editItem(index) {
 function saveItem(index) {
   const newName = document.getElementById(`edit-name-${index}`).value.trim();
   const newPrice = Number(document.getElementById(`edit-price-${index}`).value);
+  const newQuantity = document.getElementById(`edit-quantity-${index}`).value; //new quantity variable
 
-  if (!newName || newPrice <= 0) return;
+  if (!newName || newPrice <= 0 || !newQuantity) return;
 
   items[index].name = newName;
   items[index].price = newPrice;
+  items[index].quantity = newQuantity; //set new quantity
   items[index].isEditing = false;
 
   result.classList.add("d-none");

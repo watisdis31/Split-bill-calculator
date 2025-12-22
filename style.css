@@ -98,3 +98,9 @@ body {
   pointer-events: none;
   display: none;
 }
+
+.your-quantity {
+  width: 40px;
+  padding-left: 6px;
+  margin-left: 80px;
+}
