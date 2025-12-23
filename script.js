@@ -141,21 +141,34 @@ function updateYourSubtotal() {
 
     if (!cb || !qtyInput) return;
 
+    const index = Number(cb.dataset.index);
+    const maxQty = items[index].quantity;
+
+    let qty = Number(qtyInput.value) || 0;
+
+    // Clamp quantity
+    if (qty > maxQty) qty = maxQty;
+    if (qty < 0) qty = 0;
+
+    qtyInput.value = qty;
+
     if (cb.checked) {
-      // if checked and qty is 0, set to 1
-      if (Number(qtyInput.value) === 0) {
+      // auto-set to 1 if checked
+      if (qty === 0) {
+        qty = 1;
         qtyInput.value = 1;
       }
 
-      sum += items[cb.dataset.index].price * Number(qtyInput.value);
+      // set to 0 if it's unchecked
+      sum += items[index].price * qty;
     } else {
-      // if unchecked, reset qty
       qtyInput.value = 0;
     }
   });
 
   yourSubtotal.innerText = `Subtotal: ${format(sum)}`;
 }
+
 
 // ===== CALCULATE =====
 function calculate() {
