@@ -90,7 +90,7 @@ This makes the split **transparent, fair, and fast**.
 
 ## 📜 License
 
-MIT — use it, remix it, improve it, just don’t blame me if your friends still don’t pay on time.
+MIT — use it, remix it, improve it, just don’t blame us if your friends still don’t pay on time.
 
 ---
 
