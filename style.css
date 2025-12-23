@@ -102,5 +102,5 @@ body {
 .your-quantity {
   width: 40px;
   padding-left: 6px;
-  margin-left: 80px;
+  float: right;
 }

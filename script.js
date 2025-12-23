@@ -68,17 +68,17 @@ function renderItems() {
       itemList.innerHTML += `
         <li class="list-group-item">
           <input class="form-control bw-input mb-1"
-                 id="edit-name-${index}"
-                 value="${item.name}">
+                id="edit-name-${index}"
+                value="${item.name}">
           <input type="number"
-                 class="form-control bw-input mb-2"
-                 id="edit-price-${index}"
-                 value="${item.price}">
+                class="form-control bw-input mb-2"
+                id="edit-price-${index}"
+                value="${item.price}">
           <input type="number"
-                 class="form control bw-input mb-2"
-                 id="edit-quantity-${index}"
-                 style="padding-left:15px"
-                 value="${item.quantity}">
+              class="form control bw-input mb-2"
+              id="edit-quantity-${index}"
+              style="padding-left:15px"
+              value="${item.quantity}">
           <button class="bw-btn me-1" onclick="saveItem(${index})">SAVE</button>
           <button class="bw-remove-btn" onclick="removeItem(${index})">✖</button>
         </li>
@@ -103,14 +103,15 @@ function renderItems() {
     if (!item.isEditing) {
       yourItems.innerHTML += `
         <li class="list-group-item">
-          <input type="checkbox"
-                 data-price="${item.price}"
-                 onchange="updateYourSubtotal()">
-          ${item.name} (${format(item.price)}) <input class="your-quantity" type="number" max="${item.quantity}" min="0" value="0">
+          <input class="updateCheckbox" type="checkbox"
+                data-price="${item.price}"
+                onchange="updateYourSubtotal()">
+          ${item.name} (${format(item.price)}) <input class="your-quantity" type="number" max="${item.quantity}" min="0" value="0" onchange="updateYourSubtotal()">
         </li>
       `;
     }
   });
+
 
   itemsTotal.innerText = `Total: ${format(total)}`;
   updateYourSubtotal();
@@ -120,10 +121,38 @@ function updateYourSubtotal() {
   let sum = 0;
   document
     .querySelectorAll("#yourItems input:checked")
-    .forEach((cb) => (sum += Number(cb.dataset.price)));
+    .forEach((cb) => {
+      let item = cb.closest('.list-group-item');
+      let qty = item.querySelector('.your-quantity').value;
+      
+      (sum += Number(cb.dataset.price) * qty); //ad * qty here too
+    });
 
   yourSubtotal.innerText = `Subtotal: ${format(sum)}`;
 }
+
+document.addEventListener('change', () => {
+  document
+    .querySelectorAll("#yourItems")
+    .forEach((l) => {
+      let qty = l.querySelector('.your-quantity');
+      let checkboxValue = l.querySelector('.updateCheckbox');
+
+      if (checkboxValue === undefined || checkboxValue === null) {
+        return;
+      }
+      if (checkboxValue.checked) {
+        qty.min = 1;
+        if (qty.value < 1) {
+          qty.value = 1;
+        }
+      }
+      else if (!checkboxValue.checked) {
+        qty.min = 0;
+        qty.value = 0;
+      }
+  })
+})
 
 function calculate() {
   const itemsTotalValue = items.reduce((a, b) => a + b.price, 0);
@@ -135,7 +164,11 @@ function calculate() {
   let yourSum = 0;
   document
     .querySelectorAll("#yourItems input:checked")
-    .forEach((cb) => (yourSum += Number(cb.dataset.price)));
+    .forEach((cb) => {
+      let perItem = cb.closest('.list-group-item');
+      let qty = perItem.querySelector('.your-quantity').value;
+      (yourSum += Number(cb.dataset.price) * qty);
+    });
 
   const discountAmount = getDiscountAmount(itemsTotalValue);
   const timing = discountTiming.value;
