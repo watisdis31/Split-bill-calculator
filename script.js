@@ -15,6 +15,9 @@ const tax = document.getElementById("tax");
 const percentLabel = document.getElementById("percentLabel");
 const result = document.getElementById("result");
 
+// ===== STATE =====
+let items = [];
+
 // ===== SHARABLE LINK =====
 
 function loadFromURL() {
@@ -23,9 +26,7 @@ function loadFromURL() {
   if (!encoded) return;
 
   try {
-    const decoded = JSON.parse(
-      decodeURIComponent(atob(encoded))
-    );
+    const decoded = JSON.parse(atob(encoded));
 
     currencySelect.value = decoded.currency;
     items = decoded.items || [];
@@ -44,9 +45,6 @@ function loadFromURL() {
 }
 
 loadFromURL();
-
-// ===== STATE =====
-let items = [];
 
 // ===== HELPERS =====
 function format(value) {
@@ -139,9 +137,20 @@ function updateYourSubtotal() {
 
   document.querySelectorAll("#yourItems li").forEach((li) => {
     const cb = li.querySelector("input[type=checkbox]");
-    const qty = li.querySelector(".your-quantity");
-    if (cb && cb.checked) {
-      sum += items[cb.dataset.index].price * Number(qty.value);
+    const qtyInput = li.querySelector(".your-quantity");
+
+    if (!cb || !qtyInput) return;
+
+    if (cb.checked) {
+      // if checked and qty is 0, set to 1
+      if (Number(qtyInput.value) === 0) {
+        qtyInput.value = 1;
+      }
+
+      sum += items[cb.dataset.index].price * Number(qtyInput.value);
+    } else {
+      // if unchecked, reset qty
+      qtyInput.value = 0;
     }
   });
 
@@ -227,9 +236,7 @@ function shareBill() {
     tax: tax.value,
   };
 
-  const encoded = btoa(
-    encodeURIComponent(JSON.stringify(data))
-  );
+  const encoded = btoa(JSON.stringify(data));
 
   const url = `${location.origin}${location.pathname}?data=${encoded}`;
 
