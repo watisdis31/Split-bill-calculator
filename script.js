@@ -1,245 +1,251 @@
+// ===== DOM REFERENCES =====
+const currencySelect = document.getElementById("currency");
+const itemName = document.getElementById("itemName");
+const itemPrice = document.getElementById("itemPrice");
+const itemQty = document.getElementById("itemQty");
+const itemList = document.getElementById("itemList");
+const yourItems = document.getElementById("yourItems");
+const itemsTotal = document.getElementById("itemsTotal");
+const yourSubtotal = document.getElementById("yourSubtotal");
+const discount = document.getElementById("discount");
+const discountType = document.getElementById("discountType");
+const discountTiming = document.getElementById("discountTiming");
+const serviceCharge = document.getElementById("serviceCharge");
+const tax = document.getElementById("tax");
+const percentLabel = document.getElementById("percentLabel");
+const result = document.getElementById("result");
+
+// ===== SHARABLE LINK =====
+
+function loadFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const encoded = params.get("data");
+  if (!encoded) return;
+
+  try {
+    const decoded = JSON.parse(
+      decodeURIComponent(atob(encoded))
+    );
+
+    currencySelect.value = decoded.currency;
+    items = decoded.items || [];
+
+    discount.value = decoded.discount || 0;
+    discountType.value = decoded.discountType || "percent";
+    discountTiming.value = decoded.discountTiming || "before";
+    serviceCharge.value = decoded.serviceCharge || 0;
+    tax.value = decoded.tax || 0;
+
+    updateDiscountUI();
+    renderItems();
+  } catch (e) {
+    console.error("Invalid shared link");
+  }
+}
+
+loadFromURL();
+
+// ===== STATE =====
 let items = [];
 
+// ===== HELPERS =====
 function format(value) {
-  const currency = document.getElementById("currency").value;
-  return currency === "IDR"
+  return currencySelect.value === "IDR"
     ? "Rp " + value.toLocaleString("id-ID")
     : "$" + value.toFixed(2);
 }
 
-document.addEventListener("click", function() { //if quantity is empty then reset it to 1
-  const qty = itemQty;
-  if (!qty.value) {
-    qty.value = 1;
-  }
-});
-
-function getDiscountAmount(itemsTotal) {
-  const discountValue = Number(discount.value) || 0;
-  const type = discountType.value;
-
-  if (type === "percent") {
-    return itemsTotal * (discountValue / 100);
-  }
-  return discountValue;
+function getDiscountAmount(total) {
+  const val = Number(discount.value) || 0;
+  return discountType.value === "percent" ? total * (val / 100) : val;
 }
 
 function updateDiscountUI() {
-  const label = document.getElementById("percentLabel");
-  label.style.display =
+  percentLabel.style.display =
     discountType.value === "percent" ? "block" : "none";
 }
 
-updateDiscountUI();
 discountType.addEventListener("change", updateDiscountUI);
+currencySelect.addEventListener("change", renderItems);
+updateDiscountUI();
 
+// ===== ADD ITEM =====
 function addItem() {
   const name = itemName.value.trim();
   const price = Number(itemPrice.value);
-  const quantity = itemQty.value;
+  const quantity = Number(itemQty.value);
 
-  if (!name || price <= 0 || !quantity) return; //returns nothing if quantity is empty
+  if (!name || price <= 0 || quantity <= 0) return;
 
-  items.push({
-    name,
-    price,
-    quantity, // new quantity key
-    isEditing: false,
-  });
+  items.push({ name, price, quantity, isEditing: false });
 
   itemName.value = "";
   itemPrice.value = "";
-  itemQty.value = 1; //sets qty value back to 1
+  itemQty.value = 1;
 
   renderItems();
 }
 
+// ===== RENDER =====
 function renderItems() {
   itemList.innerHTML = "";
   yourItems.innerHTML = "";
 
   let total = 0;
 
-  items.forEach((item, index) => {
-    total += item.price * item.quantity; //put * qty here - bran
+  items.forEach((item, i) => {
+    total += item.price * item.quantity;
 
-    // All orders
-    if (item.isEditing) { //added new quantity stuffs
-      itemList.innerHTML += `
-        <li class="list-group-item">
-          <input class="form-control bw-input mb-1"
-                id="edit-name-${index}"
-                value="${item.name}">
-          <input type="number"
-                class="form-control bw-input mb-2"
-                id="edit-price-${index}"
-                value="${item.price}">
-          <input type="number"
-              class="form control bw-input mb-2"
-              id="edit-quantity-${index}"
-              style="padding-left:15px"
-              value="${item.quantity}">
-          <button class="bw-btn me-1" onclick="saveItem(${index})">SAVE</button>
-          <button class="bw-remove-btn" onclick="removeItem(${index})">✖</button>
-        </li>
-      `;
-    } else {
-      itemList.innerHTML += `
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            ${item.name}
-            <small class="d-block text-muted">${format(item.price)}</small>
-            <small>qty: ${item.quantity}</small>
-          </div>
-          <div>
-            <button class="bw-edit-btn me-1" onclick="editItem(${index})">✏️</button>
-            <button class="bw-remove-btn" onclick="removeItem(${index})">✖</button>
-          </div>
-        </li>
-      `;
-    }
+    itemList.innerHTML += item.isEditing
+      ? `
+      <li class="list-group-item">
+        <input class="form-control bw-input mb-1" id="en-${i}" value="${item.name}">
+        <input type="number" class="form-control bw-input mb-1" id="ep-${i}" value="${item.price}">
+        <input type="number" class="form-control bw-input mb-2" id="eq-${i}" value="${item.quantity}">
+        <button class="bw-btn me-1" onclick="saveItem(${i})">SAVE</button>
+        <button class="bw-remove-btn" onclick="removeItem(${i})">✖</button>
+      </li>`
+      : `
+      <li class="list-group-item d-flex justify-content-between">
+        <div>
+          ${item.name}
+          <small class="d-block">${format(item.price)} | qty ${item.quantity}</small>
+        </div>
+        <div>
+          <button class="bw-edit-btn me-1" onclick="editItem(${i})">✏️</button>
+          <button class="bw-remove-btn" onclick="removeItem(${i})">✖</button>
+        </div>
+      </li>`;
 
-    // Your order checklist (only non-editing items)
     if (!item.isEditing) {
       yourItems.innerHTML += `
         <li class="list-group-item">
-          <input class="updateCheckbox" type="checkbox"
-                data-price="${item.price}"
-                onchange="updateYourSubtotal()">
-          ${item.name} (${format(item.price)}) <input class="your-quantity" type="number" max="${item.quantity}" min="0" value="0" onchange="updateYourSubtotal()">
-        </li>
-      `;
+          <input type="checkbox" data-index="${i}">
+          ${item.name} (${format(item.price)})
+          <input class="your-quantity" type="number" min="0" max="${item.quantity}" value="0">
+        </li>`;
     }
   });
-
 
   itemsTotal.innerText = `Total: ${format(total)}`;
   updateYourSubtotal();
 }
 
+// ===== YOUR SUBTOTAL =====
+yourItems.addEventListener("change", updateYourSubtotal);
+
 function updateYourSubtotal() {
   let sum = 0;
-  document
-    .querySelectorAll("#yourItems input:checked")
-    .forEach((cb) => {
-      let item = cb.closest('.list-group-item');
-      let qty = item.querySelector('.your-quantity').value;
-      
-      (sum += Number(cb.dataset.price) * qty); //ad * qty here too
-    });
+
+  document.querySelectorAll("#yourItems li").forEach((li) => {
+    const cb = li.querySelector("input[type=checkbox]");
+    const qty = li.querySelector(".your-quantity");
+    if (cb && cb.checked) {
+      sum += items[cb.dataset.index].price * Number(qty.value);
+    }
+  });
 
   yourSubtotal.innerText = `Subtotal: ${format(sum)}`;
 }
 
-document.addEventListener('change', () => {
-  document
-    .querySelectorAll("#yourItems")
-    .forEach((l) => {
-      let qty = l.querySelector('.your-quantity');
-      let checkboxValue = l.querySelector('.updateCheckbox');
-
-      if (checkboxValue === undefined || checkboxValue === null) {
-        return;
-      }
-      if (checkboxValue.checked) {
-        qty.min = 1;
-        if (qty.value < 1) {
-          qty.value = 1;
-        }
-      }
-      else if (!checkboxValue.checked) {
-        qty.min = 0;
-        qty.value = 0;
-      }
-  })
-})
-
+// ===== CALCULATE =====
 function calculate() {
-  const itemsTotalValue = items.reduce((a, b) => a + b.price, 0);
-  if (itemsTotalValue === 0) return;
+  const total = items.reduce((a, b) => a + b.price * b.quantity, 0);
+  if (!total) return;
 
-  const serviceValue = Number(serviceCharge.value) || 0;
-  const taxValue = Number(tax.value) || 0;
+  const service = Number(serviceCharge.value) || 0;
+  const taxVal = Number(tax.value) || 0;
 
   let yourSum = 0;
   document
-    .querySelectorAll("#yourItems input:checked")
+    .querySelectorAll("#yourItems input[type=checkbox]:checked")
     .forEach((cb) => {
-      let perItem = cb.closest('.list-group-item');
-      let qty = perItem.querySelector('.your-quantity').value;
-      (yourSum += Number(cb.dataset.price) * qty);
+      const li = cb.closest("li");
+      yourSum +=
+        items[cb.dataset.index].price *
+        Number(li.querySelector(".your-quantity").value);
     });
 
-  const discountAmount = getDiscountAmount(itemsTotalValue);
+  const discountAmt = getDiscountAmount(total);
   const timing = discountTiming.value;
 
-  let servicePercent, taxPercent;
-  let yourDiscountShare, totalPay;
+  const base = timing === "before" ? Math.max(total - discountAmt, 1) : total;
 
-  if (timing === "before") {
-    // DISCOUNT BEFORE TAX & SERVICE
-    const netSubtotal = itemsTotalValue - discountAmount;
+  const servicePct = service / base;
+  const taxPct = taxVal / base;
 
-    servicePercent = serviceValue / netSubtotal;
-    taxPercent = taxValue / netSubtotal;
+  const yourDiscount = (yourSum / total) * discountAmt;
+  const yourService = yourSum * servicePct;
+  const yourTax = yourSum * taxPct;
 
-    yourDiscountShare =
-      (yourSum / itemsTotalValue) * discountAmount;
-
-    const yourNet = yourSum - yourDiscountShare;
-    const yourService = yourNet * servicePercent;
-    const yourTax = yourNet * taxPercent;
-
-    totalPay = yourNet + yourService + yourTax;
-  } else {
-    // DISCOUNT AFTER TAX & SERVICE
-    servicePercent = serviceValue / itemsTotalValue;
-    taxPercent = taxValue / itemsTotalValue;
-
-    const yourService = yourSum * servicePercent;
-    const yourTax = yourSum * taxPercent;
-
-    yourDiscountShare =
-      (yourSum / itemsTotalValue) * discountAmount;
-
-    totalPay = yourSum + yourService + yourTax - yourDiscountShare;
-  }
+  const final =
+    timing === "before"
+      ? yourSum - yourDiscount + yourService + yourTax
+      : yourSum + yourService + yourTax - yourDiscount;
 
   result.classList.remove("d-none");
   result.innerHTML = `
-    <p>Service: ${(servicePercent * 100).toFixed(2)}%</p>
-    <p>Tax: ${(taxPercent * 100).toFixed(2)}%</p>
-    <p>Your Discount: -${format(yourDiscountShare)}</p>
+    <p>Service: ${(servicePct * 100).toFixed(2)}%</p>
+    <p>Tax: ${(taxPct * 100).toFixed(2)}%</p>
+    <p>Your Discount: -${format(yourDiscount)}</p>
     <hr>
-    <p>Your Total: <b>${format(totalPay)}</b></p>
+    <p><b>Your Total: ${format(final)}</b></p>
   `;
 }
 
-function removeItem(index) {
-  items.splice(index, 1);
-  renderItems();
-
-  // Hide result if data changes
+// ===== EDIT / REMOVE =====
+function removeItem(i) {
+  items.splice(i, 1);
   result.classList.add("d-none");
-}
-
-function editItem(index) {
-  items[index].isEditing = true;
   renderItems();
 }
 
-function saveItem(index) {
-  const newName = document.getElementById(`edit-name-${index}`).value.trim();
-  const newPrice = Number(document.getElementById(`edit-price-${index}`).value);
-  const newQuantity = document.getElementById(`edit-quantity-${index}`).value; //new quantity variable
+function editItem(i) {
+  items[i].isEditing = true;
+  renderItems();
+}
 
-  if (!newName || newPrice <= 0 || !newQuantity) return;
-
-  items[index].name = newName;
-  items[index].price = newPrice;
-  items[index].quantity = newQuantity; //set new quantity
-  items[index].isEditing = false;
-
+function saveItem(i) {
+  items[i] = {
+    name: document.getElementById(`en-${i}`).value,
+    price: Number(document.getElementById(`ep-${i}`).value),
+    quantity: Number(document.getElementById(`eq-${i}`).value),
+    isEditing: false,
+  };
   result.classList.add("d-none");
   renderItems();
+}
+
+function shareBill() {
+  const data = {
+    currency: currencySelect.value,
+    items,
+    discount: discount.value,
+    discountType: discountType.value,
+    discountTiming: discountTiming.value,
+    serviceCharge: serviceCharge.value,
+    tax: tax.value,
+  };
+
+  const encoded = btoa(
+    encodeURIComponent(JSON.stringify(data))
+  );
+
+  const url = `${location.origin}${location.pathname}?data=${encoded}`;
+
+  // Copy to clipboard
+  navigator.clipboard.writeText(url);
+
+  // Show QR
+  const qrBox = document.getElementById("qrWrapper");
+  const qrContainer = document.getElementById("qrCode");
+
+  qrContainer.innerHTML = ""; // reset
+  qrBox.classList.remove("d-none");
+
+  new QRCode(qrContainer, {
+    text: url,
+    width: 180,
+    height: 180,
+  });
 }
