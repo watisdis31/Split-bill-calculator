@@ -169,7 +169,6 @@ function updateYourSubtotal() {
   yourSubtotal.innerText = `Subtotal: ${format(sum)}`;
 }
 
-
 // ===== CALCULATE =====
 function calculate() {
   const total = items.reduce((a, b) => a + b.price * b.quantity, 0);
@@ -228,12 +227,24 @@ function editItem(i) {
 }
 
 function saveItem(i) {
+  const newName = document.getElementById(`en-${i}`).value.trim();
+  const newPrice = Number(document.getElementById(`ep-${i}`).value);
+  let newQuantity = Number(document.getElementById(`eq-${i}`).value);
+
+  // QoL FIX: quantity can never be less than 1
+  if (newQuantity <= 0 || isNaN(newQuantity)) {
+    newQuantity = 1;
+  }
+
+  if (!newName || newPrice <= 0) return;
+
   items[i] = {
-    name: document.getElementById(`en-${i}`).value,
-    price: Number(document.getElementById(`ep-${i}`).value),
-    quantity: Number(document.getElementById(`eq-${i}`).value),
+    name: newName,
+    price: newPrice,
+    quantity: newQuantity,
     isEditing: false,
   };
+
   result.classList.add("d-none");
   renderItems();
 }
