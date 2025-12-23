@@ -69,7 +69,7 @@ Just vibes and math.
 
 ---
 
-## 🤝 Why I Made This
+## 🤝 Why We Made This
 
 Because:
 - Group bills are annoying
