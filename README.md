@@ -49,7 +49,6 @@ No math. No drama.
 
 Try it here 👇
 
-- 🌐 https://easypaycalc.netlify.app  
 - 🌐 https://easypaycalc.vercel.app  
 
 (Open it on your phone, it’s designed for that)
