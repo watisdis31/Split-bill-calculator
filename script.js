@@ -74,6 +74,34 @@ function generateBillId() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+// ===== SAFARI-SAFE COPY =====
+function copyTextSafari(text) {
+  const input = document.createElement("input");
+  input.value = text;
+  document.body.appendChild(input);
+  input.select();
+  input.setSelectionRange(0, 99999); // iOS fix
+  document.execCommand("copy");
+  document.body.removeChild(input);
+}
+
+function showQRCode(url) {
+  const qrBox = document.getElementById("qrWrapper");
+  const qrContainer = document.getElementById("qrCode");
+
+  qrContainer.innerHTML = "";
+  qrBox.classList.remove("d-none");
+
+  new QRCode(qrContainer, {
+    text: url,
+    width: 220,
+    height: 220,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H, // best for phones
+  });
+}
+
 // ===== ADD ITEM =====
 function addItem() {
   const name = itemName.value.trim();
@@ -272,32 +300,24 @@ async function shareBill() {
   };
 
   try {
+    // 1️⃣ Save to Firebase
     await db.collection("bills").doc(billId).set(data);
 
     const url = `${location.origin}${location.pathname}?bill=${billId}`;
 
-    await navigator.clipboard.writeText(url);
+    // 2️⃣ Safari-safe copy
+    copyTextSafari(url);
 
-    // QR
-    const qrBox = document.getElementById("qrWrapper");
-    const qrContainer = document.getElementById("qrCode");
+    // 3️⃣ Show QR
+    showQRCode(url);
 
-    qrContainer.innerHTML = "";
-    qrBox.classList.remove("d-none");
-
-    new QRCode(qrContainer, {
-      text: url,
-      width: 220,
-      height: 220,
-      correctLevel: QRCode.CorrectLevel.H,
-    });
-
-    alert("Link copied! Share it with your friends 🧾");
+    alert("Bill shared! Link copied 📲");
   } catch (e) {
     alert("Failed to share bill");
     console.error(e);
   }
 }
+
 
 // Bill Store
 const BILL_STORE_KEY = "bw-bill-store";
