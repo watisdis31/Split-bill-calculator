@@ -22,27 +22,26 @@ let items = [];
 
 function loadFromURL() {
   const params = new URLSearchParams(window.location.search);
-  const encoded = params.get("data");
-  if (!encoded) return;
 
-  try {
-    const decoded = JSON.parse(atob(encoded));
+  const billId = params.get("bill");
+  if (!billId) return;
 
-    currencySelect.value = decoded.currency;
-    items = decoded.items || [];
+  const data = loadBillFromStore(billId);
+  if (!data) return;
 
-    discount.value = decoded.discount || 0;
-    discountType.value = decoded.discountType || "percent";
-    discountTiming.value = decoded.discountTiming || "before";
-    serviceCharge.value = decoded.serviceCharge || 0;
-    tax.value = decoded.tax || 0;
+  currencySelect.value = data.currency;
+  items = data.items || [];
 
-    updateDiscountUI();
-    renderItems();
-  } catch (e) {
-    console.error("Invalid shared link");
-  }
+  discount.value = data.discount || 0;
+  discountType.value = data.discountType || "percent";
+  discountTiming.value = data.discountTiming || "before";
+  serviceCharge.value = data.serviceCharge || 0;
+  tax.value = data.tax || 0;
+
+  updateDiscountUI();
+  renderItems();
 }
+
 
 loadFromURL();
 
@@ -66,6 +65,10 @@ function updateDiscountUI() {
 discountType.addEventListener("change", updateDiscountUI);
 currencySelect.addEventListener("change", renderItems);
 updateDiscountUI();
+
+function generateBillId() {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 
 // ===== ADD ITEM =====
 function addItem() {
@@ -249,6 +252,7 @@ function saveItem(i) {
   renderItems();
 }
 
+// Shaer Bill to Friends
 function shareBill() {
   const data = {
     currency: currencySelect.value,
@@ -260,26 +264,42 @@ function shareBill() {
     tax: tax.value,
   };
 
-  const encoded = btoa(JSON.stringify(data));
+  const billId = generateBillId();
+  saveBillToStore(billId, data);
 
-  const url = `${location.origin}${location.pathname}?data=${encoded}`;
+  const url = `${location.origin}${location.pathname}?bill=${billId}`;
 
-  // Copy to clipboard
   navigator.clipboard.writeText(url);
 
-  // Show QR
   const qrBox = document.getElementById("qrWrapper");
   const qrContainer = document.getElementById("qrCode");
 
-  qrContainer.innerHTML = ""; // reset
+  qrContainer.innerHTML = "";
   qrBox.classList.remove("d-none");
 
   new QRCode(qrContainer, {
     text: url,
     width: 220,
     height: 220,
-    colorDark: "#000000",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H, // ⭐ HIGH error correction
+    correctLevel: QRCode.CorrectLevel.H,
   });
+}
+
+
+// Bill Store
+const BILL_STORE_KEY = "bw-bill-store";
+
+function getBillStore() {
+  return JSON.parse(localStorage.getItem(BILL_STORE_KEY)) || {};
+}
+
+function saveBillToStore(id, data) {
+  const store = getBillStore();
+  store[id] = data;
+  localStorage.setItem(BILL_STORE_KEY, JSON.stringify(store));
+}
+
+function loadBillFromStore(id) {
+  const store = getBillStore();
+  return store[id];
 }
