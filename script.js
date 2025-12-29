@@ -20,28 +20,32 @@ let items = [];
 
 // ===== SHARABLE LINK =====
 
-function loadFromURL() {
+async function loadFromURL() {
   const params = new URLSearchParams(window.location.search);
-
   const billId = params.get("bill");
   if (!billId) return;
 
-  const data = loadBillFromStore(billId);
-  if (!data) return;
+  try {
+    const doc = await db.collection("bills").doc(billId).get();
+    if (!doc.exists) return;
 
-  currencySelect.value = data.currency;
-  items = data.items || [];
+    const data = doc.data();
 
-  discount.value = data.discount || 0;
-  discountType.value = data.discountType || "percent";
-  discountTiming.value = data.discountTiming || "before";
-  serviceCharge.value = data.serviceCharge || 0;
-  tax.value = data.tax || 0;
+    currencySelect.value = data.currency;
+    items = data.items || [];
 
-  updateDiscountUI();
-  renderItems();
+    discount.value = data.discount || 0;
+    discountType.value = data.discountType || "percent";
+    discountTiming.value = data.discountTiming || "before";
+    serviceCharge.value = data.serviceCharge || 0;
+    tax.value = data.tax || 0;
+
+    updateDiscountUI();
+    renderItems();
+  } catch (e) {
+    console.error("Failed to load bill", e);
+  }
 }
-
 
 loadFromURL();
 
@@ -252,8 +256,10 @@ function saveItem(i) {
   renderItems();
 }
 
-// Shaer Bill to Friends
-function shareBill() {
+// Share Bill to Friends
+async function shareBill() {
+  const billId = generateBillId();
+
   const data = {
     currency: currencySelect.value,
     items,
@@ -262,29 +268,36 @@ function shareBill() {
     discountTiming: discountTiming.value,
     serviceCharge: serviceCharge.value,
     tax: tax.value,
+    createdAt: Date.now(),
   };
 
-  const billId = generateBillId();
-  saveBillToStore(billId, data);
+  try {
+    await db.collection("bills").doc(billId).set(data);
 
-  const url = `${location.origin}${location.pathname}?bill=${billId}`;
+    const url = `${location.origin}${location.pathname}?bill=${billId}`;
 
-  navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(url);
 
-  const qrBox = document.getElementById("qrWrapper");
-  const qrContainer = document.getElementById("qrCode");
+    // QR
+    const qrBox = document.getElementById("qrWrapper");
+    const qrContainer = document.getElementById("qrCode");
 
-  qrContainer.innerHTML = "";
-  qrBox.classList.remove("d-none");
+    qrContainer.innerHTML = "";
+    qrBox.classList.remove("d-none");
 
-  new QRCode(qrContainer, {
-    text: url,
-    width: 220,
-    height: 220,
-    correctLevel: QRCode.CorrectLevel.H,
-  });
+    new QRCode(qrContainer, {
+      text: url,
+      width: 220,
+      height: 220,
+      correctLevel: QRCode.CorrectLevel.H,
+    });
+
+    alert("Link copied! Share it with your friends 🧾");
+  } catch (e) {
+    alert("Failed to share bill");
+    console.error(e);
+  }
 }
-
 
 // Bill Store
 const BILL_STORE_KEY = "bw-bill-store";
