@@ -48,7 +48,6 @@ No math. No drama.
 ## 🚀 Live Demo
 
 Try it here 👇
-
 - 🌐 https://easypaycalc.vercel.app  
 
 (Open it on your phone, it’s designed for that)
