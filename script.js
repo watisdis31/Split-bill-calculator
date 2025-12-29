@@ -276,7 +276,10 @@ function shareBill() {
 
   new QRCode(qrContainer, {
     text: url,
-    width: 180,
-    height: 180,
+    width: 220,
+    height: 220,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H, // ⭐ HIGH error correction
   });
 }
