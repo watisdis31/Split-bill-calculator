@@ -311,13 +311,15 @@ async function shareBill() {
     // 3️⃣ Show QR
     showQRCode(url);
 
+    // 4️⃣ Fill input for iPhone manual copy
+    document.getElementById("shareLink").value = url;
+
     alert("Bill shared! Link copied 📲");
   } catch (e) {
     alert("Failed to share bill");
     console.error(e);
   }
 }
-
 
 // Bill Store
 const BILL_STORE_KEY = "bw-bill-store";
