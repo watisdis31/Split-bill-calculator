@@ -104,9 +104,17 @@ function showQRCode(url) {
 
 // ===== ADD ITEM =====
 function addItem() {
+  const multiCheck = document.getElementById("multiCheck").checked;
   const name = itemName.value.trim();
-  const price = Number(itemPrice.value);
+  let price = Number(itemPrice.value);
   const quantity = Number(itemQty.value);
+
+  if (multiCheck) {
+    price = Number(itemPrice.value) / quantity;
+  }
+  // else {
+  //   price = Number(itemPrice.value);
+  // }
 
   if (!name || price <= 0 || quantity <= 0) return;
 
